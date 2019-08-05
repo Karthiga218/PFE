@@ -1,0 +1,9 @@
+{
+    "GoogleCloud":{
+        "api":"https://vision.googleapis.com/v1/images:annotate?key=",
+        "apiKey":"AIzaSyBzgy1TeZI85DmRekfB9gNPBoQiGE0c4kA"
+    },
+    "Validation":{
+        "api":"https://soaprd.fdny.org/ords/cbt/cof/mobile/validatecofholder/"
+    }
+}
