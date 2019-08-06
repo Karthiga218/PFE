@@ -15,7 +15,8 @@ import {
   View,
   Text,
   TextInput,
-  SafeAreaView
+  SafeAreaView,
+  BackHandler
 } from "react-native";
 
 import { Button, Input, CheckBox } from "react-native-elements";
@@ -54,10 +55,27 @@ class PFEAddNewTagScreen extends Component {
   onBackButtonPressAndroid = () => {
     console.log("back pressed");
 
-    this.props.navigation.navigate("PFEStartService");
+    this.props.navigation.navigate("PFEServicing");
 
     return true;
   };
+
+  componentWillUnmount() {
+    this._didFocusSubscription && this._didFocusSubscription.remove();
+    this._willBlurSubscription && this._willBlurSubscription.remove();
+  }
+
+  componentDidMount() {
+    this._willBlurSubscription = this.props.navigation.addListener(
+      "willBlur",
+      payload =>
+        BackHandler.removeEventListener(
+          "hardwareBackPress",
+          this.onBackButtonPressAndroid
+        )
+    );
+  }
+
   updateBarcode(data) {
     this.setState({ pfetag: data });
   }
@@ -168,6 +186,7 @@ class PFEAddNewTagScreen extends Component {
             raised
             containerStyle={styles.bottomContinueButtonContainer}
             buttonStyle={bottomContinueButtonStyle}
+            disabled={this.state.pfetag === ""}
             onPress={() => {
               this.props.updateTask(JobId, taskIndex, this.state.pfetag);
               this.props.navigation.navigate("PFETasks", {

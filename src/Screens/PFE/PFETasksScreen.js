@@ -65,7 +65,10 @@ class PFETasksScreen extends Component {
         )
     );
   }
-
+  componentWillUnmount() {
+    this._didFocusSubscription && this._didFocusSubscription.remove();
+    this._willBlurSubscription && this._willBlurSubscription.remove();
+  }
   static navigationOptions = ({ navigation }) => {
     let JobId = navigation.getParam("JobId");
     let deleteMode = navigation.getParam("deleteMode", false);

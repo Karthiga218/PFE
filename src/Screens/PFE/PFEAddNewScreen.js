@@ -44,8 +44,12 @@ class PFEAddNewScreen extends Component {
       searchMode: false,
       list: [],
       origList: [],
-      unsavedChanges: false
+      unsavedChanges: false,
+      deleteMode: false,
+      selectAll: false,
+      deleteSelection: []
     };
+
     this.addTag = this.addTag.bind(this);
     this.updateBarcode = this.updateBarcode.bind(this);
 
@@ -60,6 +64,46 @@ class PFEAddNewScreen extends Component {
 
     this.props.TurnOffCamera();
   }
+
+  handleCancelButtonClick() {
+    this.setState(
+      {
+        deleteMode: false,
+        selectAll: false,
+        deleteSelection: []
+      },
+      () =>
+        this.props.navigation.setParams({
+          deleteMode: this.state.deleteMode,
+          selectAll: this.state.selectAll
+        })
+    );
+  }
+
+  handleDeleteButtonClick(JobId, deleteSelection) {
+    let filteredItems = this.state.list;
+    let filteredOrigItems = this.state.origList;
+    deleteSelection.map(i => {
+      filteredItems = filteredItems.filter(item => item !== i);
+      filteredOrigItems = filteredOrigItems.filter(item => item !== i);
+    });
+
+    this.setState(
+      {
+        deleteMode: false,
+        selectAll: false,
+        deleteSelection: [],
+        list: filteredItems,
+        origList: filteredOrigItems
+      },
+      () =>
+        this.props.navigation.setParams({
+          deleteMode: this.state.deleteMode,
+          selectAll: this.state.selectAll
+        })
+    );
+  }
+
   onBackButtonPressAndroid = () => {
     console.log("back pressed");
     if (this.props.navigation.getParam("unsavedChanges")) {
@@ -115,58 +159,147 @@ class PFEAddNewScreen extends Component {
         //    onPress={() => navigation.navigate("ClientInfo")}
       />
     );
-    return {
-      headerTitle: headerTitle,
-      headerTintColor: "white",
-      headerStyle: {
-        backgroundColor: "#e61616"
-      },
-      headerLeft: (
-        <HeaderBackButton
-          title="Back"
-          tintColor={"white"}
-          backTitleVisible={Platform.OS === "ios"}
-          onPress={() => {
-            if (navigation.getParam("unsavedChanges")) {
-              Alert.alert(
-                "Unsaved Changes",
-                "Tags not saved, disregard changes?",
-                [
-                  {
-                    text: "OK",
-                    onPress: () => navigation.navigate("PFETasks")
-                  },
-                  {
-                    text: "Cancel",
-                    onPress: () => console.log("Cancel Pressed"),
-                    style: "cancel"
-                  }
-                ],
-                { cancelable: false }
-              );
-            } else {
-              navigation.navigate("PFETasks");
-            }
-          }}
-        />
-      ),
+    let deleteMode = navigation.getParam("deleteMode", false);
+    let selectAll = navigation.getParam("selectAll", false);
 
-      headerRight: (
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          {searchIcon}
-          <FontAwesome5
-            name={"trash"}
-            size={24}
-            color={"white"}
-            style={{ marginRight: 15 }}
-            //onPress={()=>navigation.navigate("LocationConfirm")}
-            //    onPress={() => navigation.navigate("ClientInfo")}
-          />
-          {saveIcon}
-        </View>
-      )
-    };
+    let header = deleteMode
+      ? {
+          headerLeft: null,
+          headerTitle: (
+            <View
+              style={{
+                width: "100%",
+                justifyContent: "center",
+                flexDirection: "row"
+              }}
+            >
+              <Text style={{ fontSize: 20, color: "white" }}>
+                Select Tags to delete
+              </Text>
+            </View>
+          ),
+
+          // headerLeft: <Text style={{ fontSize: 20, paddingLeft: 20, color: "white", fontWeight: "bold" }}>DELETTTTETETETETETE</Text>,
+          headerStyle: {
+            backgroundColor: "#e61616"
+          },
+          headerRight: (
+            <CheckBox
+              checkedIcon={
+                <FontAwesome5
+                  solid
+                  name={"check-square"}
+                  color={"white"}
+                  size={24}
+                  onPress={navigation.getParam("UnSelectAll")}
+                />
+              }
+              uncheckedIcon={
+                <FontAwesome5
+                  name={"square"}
+                  color={"white"}
+                  size={24}
+                  onPress={navigation.getParam("SelectAll")}
+                />
+              }
+              checked={selectAll}
+            />
+          )
+        }
+      : {
+          headerTitle: headerTitle,
+          headerTintColor: "white",
+          headerStyle: {
+            backgroundColor: "#e61616"
+          },
+          headerLeft: (
+            <HeaderBackButton
+              title="Back"
+              tintColor={"white"}
+              backTitleVisible={Platform.OS === "ios"}
+              onPress={() => {
+                if (navigation.getParam("unsavedChanges")) {
+                  Alert.alert(
+                    "Unsaved Changes",
+                    "Tags not saved, disregard changes?",
+                    [
+                      {
+                        text: "OK",
+                        onPress: () => navigation.navigate("PFETasks")
+                      },
+                      {
+                        text: "Cancel",
+                        onPress: () => console.log("Cancel Pressed"),
+                        style: "cancel"
+                      }
+                    ],
+                    { cancelable: false }
+                  );
+                } else {
+                  navigation.navigate("PFETasks");
+                }
+              }}
+            />
+          ),
+
+          headerRight: (
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
+            >
+              {searchIcon}
+              <FontAwesome5
+                name={"trash"}
+                size={24}
+                color={"white"}
+                style={{ marginRight: 15 }}
+                onPress={navigation.getParam("DeleteMode")}
+
+                //onPress={()=>navigation.navigate("LocationConfirm")}
+                //    onPress={() => navigation.navigate("ClientInfo")}
+              />
+              {saveIcon}
+            </View>
+          )
+        };
+    return header;
   };
+
+  DeleteMode = () => {
+    this.setState({ deleteMode: true }, () =>
+      this.props.navigation.setParams({ deleteMode: this.state.deleteMode })
+    );
+  };
+
+  SelectAll = () => {
+    let JobId = this.props.navigation.getParam("JobId");
+    //let totalactivelength = this.props.Jobs[JobId].Tasks.filter(i =>i!==null).filter(i => i.Status === "ACTIVE").length+this.props.Jobs[JobId].Tasks.filter(i =>i ===null).length
+    // [...Array(10).keys()]
+    let totalactivelength = this.state.list.length; // this.props.Jobs[JobId].Tasks.length;
+
+    this.setState(
+      {
+        selectAll: true,
+        deleteSelection: this.state.list
+      },
+      () => this.props.navigation.setParams({ selectAll: this.state.selectAll })
+    );
+  };
+  UnSelectAll = () => {
+    this.setState({ selectAll: false, deleteSelection: [] }, () =>
+      this.props.navigation.setParams({ selectAll: this.state.selectAll })
+    );
+  };
+
+  addDeleteSelection(index) {
+    this.setState(prevState => ({
+      deleteSelection: [...prevState.deleteSelection, index]
+    }));
+  }
+  removeDeleteSelection(index) {
+    this.setState(prevState => ({
+      deleteSelection: prevState.deleteSelection.filter(i => i != index)
+    }));
+  }
 
   addTag(tag) {
     if (tag.length !== 0) {
@@ -236,6 +369,12 @@ class PFEAddNewScreen extends Component {
       searchFilterFunction: this.searchFilterFunction,
       savePFE: this.savePFE
     });
+
+    this.props.navigation.setParams({
+      DeleteMode: this.DeleteMode,
+      SelectAll: this.SelectAll,
+      UnSelectAll: this.UnSelectAll
+    });
   }
 
   render() {
@@ -243,7 +382,116 @@ class PFEAddNewScreen extends Component {
 
     console.log("st3");
     console.log(this.state.list);
-    return this.props.ShowCamera === 4 ? (
+
+    let deleteIcon = "";
+
+    let deleteTotalCount = this.state.selectAll
+      ? this.state.list.length
+      : this.state.deleteSelection.length;
+    let taskButton = this.state.deleteMode ? (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "white",
+          width: "100%",
+          alignItems: "stretch"
+        }}
+      >
+        <View>
+          {this.state.list.map((i, index) => (
+            <View
+              style={{
+                flexDirection: "row",
+                borderTopColor: "#6d6d6d",
+                borderTopWidth: 0,
+                borderBottomColor: "#bdbdbd",
+                borderBottomWidth: 1,
+                height: 60,
+                alignItems: "center",
+                width: "100%",
+                alignSelf: "flex-start"
+              }}
+              key={index}
+            >
+              <Text style={{ marginLeft: 10, fontSize: 16 }} key={index}>
+                Tag# {i}
+              </Text>
+              <View
+                style={{
+                  flexDirection: "column",
+                  //  justifyContent: "flex-end",
+                  // alignItems: "flex-end",
+                  position: "absolute",
+                  marginLeft: "85%"
+                }}
+              >
+                <CheckBox
+                  containerStyle={{ padding: 0, margin: 0 }}
+                  checkedIcon={
+                    <FontAwesome5
+                      solid
+                      name={"check-square"}
+                      color={"#4286f4"}
+                      size={25}
+                      onPress={() => this.removeDeleteSelection(i)}
+                    />
+                  }
+                  uncheckedIcon={
+                    <FontAwesome5
+                      name={"square"}
+                      color={"#4286f4"}
+                      size={25}
+                      onPress={() => this.addDeleteSelection(i)}
+                    />
+                  }
+                  checked={this.state.deleteSelection.includes(i)}
+                />
+              </View>
+            </View>
+          ))}
+        </View>
+
+        <View
+          style={{
+            height: 80,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            width: "100%",
+            borderTopColor: "rgb(242, 242, 242)",
+            borderTopWidth: 0,
+            paddingBottom: 20,
+            paddingTop: 20
+          }}
+        >
+          <Button
+            style="solid"
+            title="CANCEL"
+            raised
+            buttonStyle={{ width: "80%", backgroundColor: "#dddddd" }}
+            containerStyle={{
+              width: "50%",
+              flexDirection: "row",
+              justifyContent: "center"
+            }}
+            onPress={() => this.handleCancelButtonClick()}
+          />
+          <Button
+            style="solid"
+            title={`DELETE ${deleteTotalCount}`}
+            raised
+            buttonStyle={{ width: "80%", backgroundColor: "#ff0000" }}
+            containerStyle={{
+              width: "50%",
+              flexDirection: "row",
+              justifyContent: "center"
+            }}
+            onPress={() =>
+              this.handleDeleteButtonClick(JobId, this.state.deleteSelection)
+            }
+          />
+        </View>
+      </View>
+    ) : this.props.ShowCamera === 4 ? (
       <PFEBarcodeReadScreen updateBC={this.updateBarcode} />
     ) : (
       <View style={{ flex: 1, backgroundColor: "white" }}>
@@ -306,7 +554,7 @@ class PFEAddNewScreen extends Component {
           >
             <Input
               containerStyle={{ width: "90%" }}
-              placeholder="Enter tag..."
+              placeholder="Enter tag"
               value={this.state.enterTag}
               onChangeText={text => this.setState({ enterTag: text })}
             />
@@ -321,6 +569,7 @@ class PFEAddNewScreen extends Component {
         </View>
       </View>
     );
+    return taskButton;
   }
 }
 

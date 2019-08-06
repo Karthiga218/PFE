@@ -15,7 +15,8 @@ import {
   View,
   Text,
   TextInput,
-  SafeAreaView
+  SafeAreaView,
+  BackHandler
 } from "react-native";
 
 import { Button, Input, CheckBox } from "react-native-elements";
@@ -40,7 +41,41 @@ class PFEStartServiceScreen extends Component {
       hasOldTag: "null"
     };
     this.props.TurnOffCamera();
+
+    this._didFocusSubscription = this.props.navigation.addListener(
+      "didFocus",
+      payload =>
+        BackHandler.addEventListener(
+          "hardwareBackPress",
+          this.onBackButtonPressAndroid
+        )
+    );
+
     console.log("PFESTART");
+  }
+
+  onBackButtonPressAndroid = () => {
+    console.log("back pressed");
+
+    this.props.navigation.navigate("PFETasks");
+
+    return true;
+  };
+
+  componentWillUnmount() {
+    this._didFocusSubscription && this._didFocusSubscription.remove();
+    this._willBlurSubscription && this._willBlurSubscription.remove();
+  }
+
+  componentDidMount() {
+    this._willBlurSubscription = this.props.navigation.addListener(
+      "willBlur",
+      payload =>
+        BackHandler.removeEventListener(
+          "hardwareBackPress",
+          this.onBackButtonPressAndroid
+        )
+    );
   }
   updateBarcode = value => {
     this.setState({ pfetag: value });

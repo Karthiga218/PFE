@@ -60,7 +60,6 @@ class PFECompletedTaskListItem extends Component {
       "December"
     ];
     const { deleteMode, item, JobId } = this.props;
-    console.log(item, "JOBID_is", JobId);
     //let deleteIcon = (this.state.deleteSelected === true) ? <View style={{marginVertical:10,marginHorizontal:20}}><FontAwesome5 solid name={"check-square"} color={"#4286f4"}  size={25} onPress={()=>this.setState({deleteSelected:false})}/></View> : <View style={{marginHorizontal:20,marginVertical:10}}><FontAwesome5 name={"square"} color={"#4286f4"}  size={25} onPress={()=>this.setState({deleteSelected:true})} /></View>
     let deleteIcon = (
       <CheckBox
